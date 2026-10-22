@@ -30,8 +30,8 @@ _REPORTS = Path(__file__).resolve().parents[1] / "model_analyzer" / "reports"
 # models under test came from a third party.
 _TAINTED = re.compile(
     r"\b("
-    r"model_name|model_config_name|variant_name|report_key"
-    r"|gpu_names|max_memories|composing_config_name|platform"
+    r"model_name|model_config_name|variant_name|best_config_name|report_key"
+    r"|gpu_names?|max_memories|composing_config_name|platform|backend"
     r")\b"
 )
 

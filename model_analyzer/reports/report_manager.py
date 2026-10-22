@@ -536,15 +536,17 @@ class ReportManager:
 
         constraint_str = "None"
         if constraint_strs:
+            # Escaped on every branch for the reason given in
+            # _create_multi_model_constraint_string.
             if report_key == TOP_MODELS_REPORT_KEY:
-                constraint_str = constraint_strs[GLOBAL_CONSTRAINTS_KEY]
+                constraint_str = escape(constraint_strs[GLOBAL_CONSTRAINTS_KEY])
             elif "," in report_key:  # indicates multi-model
                 constraint_str = self._create_multi_model_constraint_string(
                     report_key, constraint_strs
                 )
             else:  # single-model
                 if report_key in constraint_strs:
-                    constraint_str = constraint_strs[report_key]
+                    constraint_str = escape(constraint_strs[report_key])
 
         return constraint_str
 
@@ -764,7 +766,8 @@ class ReportManager:
         else:
             platform = model_config.get_field("platform")
 
-        return f"platform {platform}"
+        # Plain text here, but the caller splices it into <LI> markup.
+        return f"platform {escape(platform)}"
 
     def _create_summary_max_batch_size_phrase(self, model_config):
         return f"max batch size of {model_config.max_batch_size()}"
@@ -784,7 +787,8 @@ class ReportManager:
         return ret_str
 
     def _create_summary_gpu_name_phrase(self, gpu_name, report_gpu_metrics):
-        return f", on GPU(s) {gpu_name}" if report_gpu_metrics else ""
+        # Plain text here, but the summary sentence it joins is markup.
+        return f", on GPU(s) {escape(gpu_name)}" if report_gpu_metrics else ""
 
     def _construct_summary_result_table(
         self, sorted_measurements, multi_model, has_composing_models, report_gpu_metrics
@@ -1254,22 +1258,7 @@ class ReportManager:
                 f"GPU(s) {escape(gpu_names)} with total memory {escape(max_memories)}"
             )
 
-        if run_config.is_ensemble_model():
-            sentence = f"<strong>{escape(model_config_name)}</strong> is comprised of the following composing models:"
-
-            for composing_config_variant in run_config.composing_config_variants():
-                sentence = (
-                    sentence
-                    + "<LI> "
-                    + self._create_summary_config_info(composing_config_variant)
-                    + " </LI>"
-                )
-
-            sentence = (
-                sentence
-                + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
-            )
-        elif run_config.is_bls_model():
+        if run_config.is_ensemble_model() or run_config.is_bls_model():
             sentence = f"<strong>{escape(model_config_name)}</strong> is comprised of the following composing models:"
 
             for composing_config_variant in run_config.composing_config_variants():
