@@ -21,6 +21,7 @@ from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.constants import GLOBAL_CONSTRAINTS_KEY, TOP_MODELS_REPORT_KEY
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.reports.report_manager import ReportManager
@@ -695,6 +696,72 @@ class TestReportManager(trc.TestResultCollector):
                         max: "<script>alert(1)</script>"
                 """
             )
+
+    @patch(
+        "model_analyzer.reports.report_manager.ReportManager._build_constraint_strings",
+        return_value={
+            "modelA": "<script>alert(1)</script>",
+            GLOBAL_CONSTRAINTS_KEY: "<script>alert(2)</script>",
+        },
+    )
+    def test_constraint_string_escapes_single_and_top_models(self, *args):
+        """
+        The single-model and top-models branches return the constraint text
+        directly, so they must escape it just as the multi-model branch does.
+        """
+
+        report_manager = ReportManager(
+            mode=MagicMock(),
+            config=MagicMock(),
+            gpu_info=MagicMock(),
+            result_manager=MagicMock(),
+            constraint_manager=MagicMock(),
+        )
+
+        for report_key in ("modelA", TOP_MODELS_REPORT_KEY):
+            constraint_str = report_manager._create_constraint_string(report_key)
+            self.assertNotIn("<script>", constraint_str)
+            self.assertIn("&lt;script&gt;", constraint_str)
+
+    def test_summary_gpu_name_phrase_escapes_gpu_name(self):
+        """
+        The phrase is plain text but lands inside the summary sentence, which
+        add_paragraph does not escape.
+        """
+
+        report_manager = ReportManager(
+            mode=MagicMock(),
+            config=MagicMock(),
+            gpu_info=MagicMock(),
+            result_manager=MagicMock(),
+            constraint_manager=MagicMock(),
+        )
+        phrase = report_manager._create_summary_gpu_name_phrase(
+            "<script>alert(1)</script>", report_gpu_metrics=True
+        )
+        self.assertNotIn("<script>", phrase)
+        self.assertIn("&lt;script&gt;", phrase)
+
+    def test_summary_platform_phrase_escapes_backend_and_platform(self):
+        """
+        backend and platform come from a model's config.pbtxt and land inside
+        the summary sentence's <LI> markup.
+        """
+
+        report_manager = ReportManager(
+            mode=MagicMock(),
+            config=MagicMock(),
+            gpu_info=MagicMock(),
+            result_manager=MagicMock(),
+            constraint_manager=MagicMock(),
+        )
+        for field in ("backend", "platform"):
+            model_config = ModelConfig.create_from_dictionary(
+                {"name": "m", field: "<script>alert(1)</script>"}
+            )
+            phrase = report_manager._create_summary_platform_phrase(model_config)
+            self.assertNotIn("<script>", phrase)
+            self.assertIn("&lt;script&gt;", phrase)
 
     @patch("model_analyzer.plots.plot_manager.PlotManager._create_update_simple_plot")
     def test_summary_report_escapes_malicious_model_name(self, add_plot_fn):
