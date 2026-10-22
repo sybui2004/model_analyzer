@@ -1258,22 +1258,7 @@ class ReportManager:
                 f"GPU(s) {escape(gpu_names)} with total memory {escape(max_memories)}"
             )
 
-        if run_config.is_ensemble_model():
-            sentence = f"<strong>{escape(model_config_name)}</strong> is comprised of the following composing models:"
-
-            for composing_config_variant in run_config.composing_config_variants():
-                sentence = (
-                    sentence
-                    + "<LI> "
-                    + self._create_summary_config_info(composing_config_variant)
-                    + " </LI>"
-                )
-
-            sentence = (
-                sentence
-                + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
-            )
-        elif run_config.is_bls_model():
+        if run_config.is_ensemble_model() or run_config.is_bls_model():
             sentence = f"<strong>{escape(model_config_name)}</strong> is comprised of the following composing models:"
 
             for composing_config_variant in run_config.composing_config_variants():

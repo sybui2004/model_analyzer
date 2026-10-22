@@ -46,6 +46,7 @@ class TestOutputValidator:
     def __init__(self, config, test_name, export_path):
         self._config = config
         self._export_path = export_path
+        self._report_extension = report_extension()
         check_function = self.__getattribute__(f"check_{test_name}")
 
         if check_function():
@@ -70,7 +71,7 @@ class TestOutputValidator:
                     "reports",
                     "summaries",
                     model,
-                    f"result_summary.{report_extension()}",
+                    f"result_summary.{self._report_extension}",
                 )
             ):
                 print(f"\n***\n*** Summary not found for {model}.\n***")
@@ -93,7 +94,7 @@ class TestOutputValidator:
                     "reports",
                     "summaries",
                     dir,
-                    f"result_summary.{report_extension()}",
+                    f"result_summary.{self._report_extension}",
                 )
             ):
                 print("\n***\n*** Top models summary not found.\n***")
@@ -114,7 +115,7 @@ class TestOutputValidator:
                     "reports",
                     "detailed",
                     model_config,
-                    f"detailed_report.{report_extension()}",
+                    f"detailed_report.{self._report_extension}",
                 )
             ):
                 print(f"\n***\n*** Detailed report not found for {model_config}.\n***")

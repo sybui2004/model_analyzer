@@ -195,10 +195,11 @@ class HTMLReport(Report):
                 f"font-size: {font_size}"
             )
 
+        style = table_style()
         html_table = ""
         # Add headers
         headers = "".join(
-            [f'<th style="{table_style()}">{escape(h)}</th>' for h in table.headers()]
+            [f'<th style="{style}">{escape(h)}</th>' for h in table.headers()]
         )
         html_table += f"<tr>{headers}</tr>"
 
@@ -206,14 +207,14 @@ class HTMLReport(Report):
         for i in range(table.size()):
             row_data = "".join(
                 [
-                    f'<td style="{table_style()}">{escape(d)}</td>'
+                    f'<td style="{style}">{escape(d)}</td>'
                     for d in table.get_row_by_index(i)
                 ]
             )
             html_table += f"<tr>{row_data}</tr>"
 
         # Wrap with table details
-        html_table = f'<table style="{table_style()}">{html_table}</table>'
+        html_table = f'<table style="{style}">{html_table}</table>'
         self._body += f"<center>{html_table}</center>"
 
     def write_report(self, filename):
